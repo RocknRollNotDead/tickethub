@@ -19,4 +19,20 @@ public class Event {
     private Instant date;
     private Integer totalSeats;
     private Integer availableSeats;
+
+    public void bookingSeat() {
+        if (availableSeats <= 0) {
+            throw new RuntimeException("Not seats!");
+        }
+        availableSeats--;
+    }
+
+    public void bookingSeat(Integer count) {
+        int result = availableSeats - count;
+        if (result <= 0) {
+            throw new RuntimeException("Not available seats!");
+        }
+        availableSeats = result;
+    }
+
 }
