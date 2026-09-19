@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Condition Dashboard — TicketHub</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #131a22;
+    --border: #26313d;
+    --text: #d6e2ec;
+    --muted: #6b7c8c;
+    --accent: #4fd1a5;
+    --danger: #ff6b6b;
+    --warn: #f0b429;
+    --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    text-transform: none;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
+
+  .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 140px; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    background: #0a0e13;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+
+  button {
+    background: var(--accent);
+    color: #06231a;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .status-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .status-line:last-child { border-bottom: none; }
+  .status-line .val { color: var(--accent); font-weight: 600; }
+  .status-line .val.bad { color: var(--danger); }
+
+  .verdict {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+  }
+  .verdict.show { display: block; }
+  .verdict.race { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); }
+  .verdict.clean { background: rgba(79,209,165,0.1); border: 1px solid var(--accent); color: var(--accent); }
+
+  .log {
+    background: #0a0e13;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .log div { padding: 2px 0; }
+  .log .ok { color: var(--accent); }
+  .log .err { color: var(--danger); }
+
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  code { background: #0a0e13; padding: 1px 5px; border-radius: 3px; color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Race Condition Dashboard</h1>
+  <div class="subtitle">Кликабельный тест гонки на бронировании мест — TicketHub</div>
+
+  <div class="panel">
+    <h2>1. Подключение</h2>
+    <div class="row">
+      <div class="field">
+        <label>Base URL бэкенда</label>
+        <input id="baseUrl" value="http://localhost:8080">
+      </div>
+    </div>
+    <div class="hint">Если увидишь ошибку CORS в консоли браузера — на бэкенде нужно разрешить кросс-доменные запросы (см. подсказку внизу страницы).</div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Тестовые данные</h2>
+    <div class="row">
+      <div class="field">
+        <label>Мест на событие</label>
+        <input id="seats" type="number" value="10" min="1">
+      </div>
+      <div class="field">
+        <label>Параллельных запросов брони</label>
+        <input id="concurrency" type="number" value="50" min="1">
+      </div>
+    </div>
+    <button id="setupBtn">Создать пользователя и событие</button>
+    <div class="hint" id="setupResult"></div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Запуск гонки</h2>
+    <button id="raceBtn" disabled>Запустить N параллельных броней</button>
+    <button id="resetBtn" class="secondary">Сбросить</button>
+
+    <div style="margin-top:16px;">
+      <div class="status-line"><span>Успешных броней</span><span class="val" id="successCount">—</span></div>
+      <div class="status-line"><span>Отклонённых</span><span class="val" id="failCount">—</span></div>
+      <div class="status-line"><span>Мест было</span><span class="val" id="seatsWas">—</span></div>
+      <div class="status-line"><span>Мест осталось</span><span class="val" id="seatsLeft">—</span></div>
+    </div>
+
+    <div id="verdict" class="verdict"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Лог запросов</h2>
+    <div class="log" id="log"><div>Ожидаю запуска...</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Если запросы не проходят (CORS)</h2>
+    <div class="hint">
+      Браузер блокирует запросы с этой страницы на другой origin, если бэкенд не разрешил это явно. Добавь в проект конфиг:
+      <br><br>
+      <code>@Configuration</code><br>
+      <code>public class CorsConfig implements WebMvcConfigurer {</code><br>
+      <code>&nbsp;&nbsp;public void addCorsMappings(CorsRegistry r) {</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;r.addMapping("/**").allowedOrigins("*").allowedMethods("*");</code><br>
+      <code>&nbsp;&nbsp;}</code><br>
+      <code>}</code>
+    </div>
+  </div>
+</div>
+
+<script>
+  let eventId = null;
+  let userId = null;
+
+  const $ = (id) => document.getElementById(id);
+  const logEl = $('log');
+
+  function log(msg, cls) {
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function clearLog() {
+    logEl.innerHTML = '';
+  }
+
+  function baseUrl() {
+    return $('baseUrl').value.replace(/\/$/, '');
+  }
+
+  $('setupBtn').addEventListener('click', async () => {
+    clearLog();
+    $('setupResult').textContent = 'Создаю...';
+    $('raceBtn').disabled = true;
+    try {
+      // создаём пользователя
+      const userRes = await fetch(`${baseUrl()}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'name=DashboardTestUser'
+      });
+      if (!userRes.ok) throw new Error(`Создание пользователя: HTTP ${userRes.status}`);
+      const user = await userRes.json();
+      userId = user.id;
+      log(`Пользователь создан: id=${userId}`, 'ok');
+
+      // создаём событие
+      const seats = parseInt($('seats').value, 10);
+      const eventDate = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+      const eventRes = await fetch(`${baseUrl()}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Dashboard Test Event',
+          date: eventDate,
+          totalSeats: seats,
+          availableSeats: seats
+        })
+      });
+      if (!eventRes.ok) throw new Error(`Создание события: HTTP ${eventRes.status}`);
+
+      // ищем id только что созданного события
+      const eventsRes = await fetch(`${baseUrl()}/events`);
+      const events = await eventsRes.json();
+      const created = events.filter(e => e.name === 'Dashboard Test Event').pop();
+      if (!created) throw new Error('Не нашёл созданное событие в списке');
+      eventId = created.id;
+
+      log(`Событие создано: id=${eventId}, мест=${seats}`, 'ok');
+      $('setupResult').textContent = `Готово: userId=${userId}, eventId=${eventId}`;
+      $('seatsWas').textContent = seats;
+      $('raceBtn').disabled = false;
+    } catch (err) {
+      log(`Ошибка настройки: ${err.message}`, 'err');
+      $('setupResult').textContent = `Ошибка: ${err.message}`;
+    }
+  });
+
+  $('raceBtn').addEventListener('click', async () => {
+    if (!eventId || !userId) return;
+    $('raceBtn').disabled = true;
+    $('verdict').className = 'verdict';
+    $('successCount').textContent = '...';
+    $('failCount').textContent = '...';
+    clearLog();
+    log('Запускаю параллельные запросы...');
+
+    const concurrency = parseInt($('concurrency').value, 10);
+    const requests = Array.from({ length: concurrency }, (_, i) =>
+      fetch(`${baseUrl()}/events/${eventId}/book?userId=${userId}`, { method: 'POST' })
+        .then(res => {
+          const ok = res.ok;
+          log(`#${i + 1}: HTTP ${res.status}`, ok ? 'ok' : 'err');
+          return ok;
+        })
+        .catch(err => {
+          log(`#${i + 1}: ошибка сети — ${err.message}`, 'err');
+          return false;
+        })
+    );
+
+    const results = await Promise.all(requests);
+    const successCount = results.filter(Boolean).length;
+    const failCount = results.length - successCount;
+
+    $('successCount').textContent = successCount;
+    $('failCount').textContent = failCount;
+    if (failCount > 0) $('failCount').classList.add('bad');
+
+    // проверяем финальное число мест
+    const eventsRes = await fetch(`${baseUrl()}/events`);
+    const events = await eventsRes.json();
+    const finalEvent = events.find(e => e.id === eventId);
+    const seatsWas = parseInt($('seatsWas').textContent, 10);
+    const seatsLeft = finalEvent ? finalEvent.availableSeats : null;
+    $('seatsLeft').textContent = seatsLeft;
+
+    const verdictEl = $('verdict');
+    if (successCount > seatsWas || (seatsLeft !== null && seatsLeft < 0)) {
+      verdictEl.className = 'verdict race show';
+      verdictEl.textContent = `⚠️ Race condition подтверждена: успешных броней (${successCount}) больше, чем было мест (${seatsWas}), либо availableSeats ушёл в минус (${seatsLeft}).`;
+    } else {
+      verdictEl.className = 'verdict clean show';
+      verdictEl.textContent = `✅ Перепродажи не произошло в этом запуске. Попробуй увеличить число параллельных запросов — гонка не всегда проявляется с первого раза.`;
+    }
+
+    $('raceBtn').disabled = false;
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    eventId = null;
+    userId = null;
+    $('raceBtn').disabled = true;
+    $('setupResult').textContent = '';
+    ['successCount', 'failCount', 'seatsWas', 'seatsLeft'].forEach(id => $(id).textContent = '—');
+    $('failCount').classList.remove('bad');
+    $('verdict').className = 'verdict';
+    clearLog();
+    log('Сброшено. Нажми "Создать пользователя и событие".');
+  });
+</script>
+</body>
+</html>
