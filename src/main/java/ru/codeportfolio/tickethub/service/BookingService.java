@@ -18,16 +18,17 @@ public class BookingService {
     private final UserRepository userRepository;
 
     public void createBooking(Long eventId, Long userId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Not found event!"));
-        event.bookingSeat();
-        eventRepository.save(event);
-        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Not found user!"));
-        bookingRepository.save(
-                Booking.builder()
-                        .ownerId(userId)
-                        .eventId(eventId)
-                        .build()
-        );
+            Event event = eventRepository.findWithLockById(eventId)
+                    .orElseThrow(() -> new RuntimeException("Not found event!"));
+            event.bookingSeat();
+            eventRepository.save(event);
+            userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Not found user!"));
+            bookingRepository.save(
+                    Booking.builder()
+                            .ownerId(userId)
+                            .eventId(eventId)
+                            .build()
+            );
+
     }
 }
