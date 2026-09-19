@@ -9,6 +9,7 @@ import ru.codeportfolio.tickethub.mapper.EventMapper;
 import ru.codeportfolio.tickethub.model.Event;
 import ru.codeportfolio.tickethub.repository.EventRepository;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -31,11 +32,7 @@ public class EventService {
     public List<EventResponseDto> getAllEvents(){
         List<Event> events = eventRepository.findAll();
         List<EventResponseDto> eventResponseDtoList = eventMapper.toDtoList(events);
-        log.info("return events: {} id {} {} id {}",
-                eventResponseDtoList.get(3).name(),
-                eventResponseDtoList.get(3).id(),
-                eventResponseDtoList.get(4).name(),
-                eventResponseDtoList.get(4).id());
+        eventResponseDtoList.sort(Comparator.comparing(EventResponseDto::date));
         return eventResponseDtoList;
 
     }
