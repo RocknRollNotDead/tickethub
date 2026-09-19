@@ -25,8 +25,8 @@ public class BookingService {
         userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Not found user!"));
         bookingRepository.save(
                 Booking.builder()
-                        .ownerId(eventId)
-                        .eventId(userId)
+                        .ownerId(userId)
+                        .eventId(eventId)
                         .build()
         );
     }

@@ -21,5 +21,6 @@ public class Booking {
     @Column("event_id")
     private Long eventId;
 
-    private BookingStatus status;
+    @Builder.Default
+    private BookingStatus status = BookingStatus.RESERVED;
 }

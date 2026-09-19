@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.codeportfolio.tickethub.dto.UserResponseDto;
 import ru.codeportfolio.tickethub.service.UserService;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -24,9 +26,10 @@ public class UserController {
     }
 
     @PostMapping("/balance")
-    public void addMoney(Long rubles,
+    public ResponseEntity<Void> addMoney(Long rubles,
                         @RequestHeader String idFromHeader){
         Long id = Long.valueOf(idFromHeader);
         userService.addMoney(rubles, id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
