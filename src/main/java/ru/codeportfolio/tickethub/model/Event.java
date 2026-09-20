@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
@@ -15,6 +16,8 @@ import java.time.Instant;
 public class Event {
     @Id
     private Long id;
+    @Version
+    private Long version;
     private String name;
     private Instant date;
     private Integer totalSeats;

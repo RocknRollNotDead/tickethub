@@ -18,7 +18,7 @@ public class BookingService {
     private final UserRepository userRepository;
 
     public void createBooking(Long eventId, Long userId) {
-            Event event = eventRepository.findWithLockById(eventId)
+            Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Not found event!"));
             event.bookingSeat();
             eventRepository.save(event);
