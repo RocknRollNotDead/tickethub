@@ -1,6 +1,8 @@
 package ru.codeportfolio.tickethub.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.codeportfolio.tickethub.model.Booking;
@@ -17,6 +19,8 @@ public class BookingService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
+    @Retryable(includes = OptimisticLockingFailureException.class,
+            maxRetries = 3, delay = 50)
     public void createBooking(Long eventId, Long userId) {
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Not found event!"));
