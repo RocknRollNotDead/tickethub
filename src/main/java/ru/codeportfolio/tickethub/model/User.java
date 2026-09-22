@@ -21,4 +21,12 @@ public class User {
     public void addBalance(Long rubles) {
         this.balance = balance + rubles;
     }
+
+    public void reduceBalance(Long rubles) {
+        long targetBalance = balance - rubles;
+        if (targetBalance < 0L) {
+            throw new RuntimeException("Balance hasnt!");
+        }
+        this.balance = targetBalance;
+    }
 }
