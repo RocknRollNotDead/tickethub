@@ -1,135 +1,135 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Race Condition Dashboard — TicketHub</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --panel: #131a22;
-      --border: #26313d;
-      --text: #d6e2ec;
-      --muted: #6b7c8c;
-      --accent: #4fd1a5;
-      --danger: #ff6b6b;
-      --warn: #f0b429;
-      --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 14px;
-      line-height: 1.5;
-      padding: 32px 20px 80px;
-    }
-    .wrap { max-width: 720px; margin: 0 auto; }
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0 0 4px;
-      letter-spacing: -0.01em;
-    }
-    .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Condition Dashboard — TicketHub</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #131a22;
+    --border: #26313d;
+    --text: #d6e2ec;
+    --muted: #6b7c8c;
+    --accent: #4fd1a5;
+    --danger: #ff6b6b;
+    --warn: #f0b429;
+    --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .panel h2 {
-      font-size: 12px;
-      text-transform: none;
-      color: var(--muted);
-      margin: 0 0 16px;
-      font-weight: 500;
-    }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    text-transform: none;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
 
-    .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-    .field { flex: 1; min-width: 140px; }
-    label {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      background: #0a0e13;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text);
-      padding: 8px 10px;
-      font-family: var(--mono);
-      font-size: 13px;
-    }
-    input:focus { outline: none; border-color: var(--accent); }
+  .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 140px; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    background: #0a0e13;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
 
-    button {
-      background: var(--accent);
-      color: #06231a;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 16px;
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    button:hover { opacity: 0.85; }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-    button.secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+  button {
+    background: var(--accent);
+    color: #06231a;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
 
-    .status-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .status-line:last-child { border-bottom: none; }
-    .status-line .val { color: var(--accent); font-weight: 600; }
-    .status-line .val.bad { color: var(--danger); }
+  .status-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .status-line:last-child { border-bottom: none; }
+  .status-line .val { color: var(--accent); font-weight: 600; }
+  .status-line .val.bad { color: var(--danger); }
 
-    .verdict {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 4px;
-      font-size: 13px;
-      display: none;
-    }
-    .verdict.show { display: block; }
-    .verdict.race { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); }
-    .verdict.clean { background: rgba(79,209,165,0.1); border: 1px solid var(--accent); color: var(--accent); }
+  .verdict {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+  }
+  .verdict.show { display: block; }
+  .verdict.race { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); }
+  .verdict.clean { background: rgba(79,209,165,0.1); border: 1px solid var(--accent); color: var(--accent); }
 
-    .log {
-      background: #0a0e13;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 12px;
-      max-height: 220px;
-      overflow-y: auto;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .log div { padding: 2px 0; }
-    .log .ok { color: var(--accent); }
-    .log .err { color: var(--danger); }
+  .log {
+    background: #0a0e13;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .log div { padding: 2px 0; }
+  .log .ok { color: var(--accent); }
+  .log .err { color: var(--danger); }
 
-    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
-    code { background: #0a0e13; padding: 1px 5px; border-radius: 3px; color: var(--warn); }
-  </style>
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  code { background: #0a0e13; padding: 1px 5px; border-radius: 3px; color: var(--warn); }
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -330,24 +330,24 @@
     let firstErrorBody = null;
 
     const requests = Array.from({ length: concurrency }, (_, i) =>
-            fetch(`${baseUrl()}/events/${eventId}/book?userId=${userId}`, { method: 'POST' })
-                    .then(async res => {
-                      const ok = res.ok;
-                      if (ok) {
-                        log(`#${i + 1}: HTTP ${res.status}`, 'ok');
-                      } else {
-                        const bodyText = await res.text().catch(() => '(не удалось прочитать тело)');
-                        const shortBody = bodyText.slice(0, 200);
-                        log(`#${i + 1}: HTTP ${res.status} — ${shortBody}`, 'err');
-                        if (!firstErrorBody) firstErrorBody = `HTTP ${res.status}\n\n${bodyText}`;
-                      }
-                      return ok;
-                    })
-                    .catch(err => {
-                      log(`#${i + 1}: ошибка сети — ${err.message}`, 'err');
-                      if (!firstErrorBody) firstErrorBody = `Сетевая ошибка: ${err.message}`;
-                      return false;
-                    })
+      fetch(`${baseUrl()}/events/${eventId}/book?userId=${userId}`, { method: 'POST' })
+        .then(async res => {
+          const ok = res.ok;
+          if (ok) {
+            log(`#${i + 1}: HTTP ${res.status}`, 'ok');
+          } else {
+            const bodyText = await res.text().catch(() => '(не удалось прочитать тело)');
+            const shortBody = bodyText.slice(0, 200);
+            log(`#${i + 1}: HTTP ${res.status} — ${shortBody}`, 'err');
+            if (!firstErrorBody) firstErrorBody = `HTTP ${res.status}\n\n${bodyText}`;
+          }
+          return ok;
+        })
+        .catch(err => {
+          log(`#${i + 1}: ошибка сети — ${err.message}`, 'err');
+          if (!firstErrorBody) firstErrorBody = `Сетевая ошибка: ${err.message}`;
+          return false;
+        })
     );
 
     const results = await Promise.all(requests);
@@ -401,6 +401,137 @@
     $('verdict').className = 'verdict';
     clearLog();
     log('Сброшено. Нажми "Создать пользователя и событие".');
+  });
+
+  // --- Этап 4: тест дедлока на переводах -----------------------------------
+  let userA = null;
+  let userB = null;
+  const dlLogEl = $('dlLog');
+
+  function dlLog(msg, cls) {
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    dlLogEl.appendChild(line);
+    dlLogEl.scrollTop = dlLogEl.scrollHeight;
+  }
+  function dlClearLog() { dlLogEl.innerHTML = ''; }
+
+  async function createFundedUser(name, balance) {
+    const userRes = await fetch(`${baseUrl()}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `name=${encodeURIComponent(name)}`
+    });
+    if (!userRes.ok) throw new Error(`Создание пользователя ${name}: HTTP ${userRes.status}`);
+    const user = await userRes.json();
+
+    const balRes = await fetch(`${baseUrl()}/users/balance`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'idFromHeader': String(user.id)
+      },
+      body: `rubles=${balance}`
+    });
+    if (!balRes.ok) throw new Error(`Пополнение баланса ${name}: HTTP ${balRes.status}`);
+
+    return user.id;
+  }
+
+  $('dlSetupBtn').addEventListener('click', async () => {
+    dlClearLog();
+    $('dlSetupResult').textContent = 'Создаю...';
+    $('dlRunBtn').disabled = true;
+    try {
+      const balance = parseInt($('dlBalance').value, 10);
+      userA = await createFundedUser('DeadlockUserA', balance);
+      dlLog(`Пользователь A создан: id=${userA}, баланс=${balance}`, 'ok');
+      userB = await createFundedUser('DeadlockUserB', balance);
+      dlLog(`Пользователь B создан: id=${userB}, баланс=${balance}`, 'ok');
+      $('dlSetupResult').textContent = `Готово: A=${userA}, B=${userB}`;
+      $('dlRunBtn').disabled = false;
+    } catch (err) {
+      dlLog(`Ошибка настройки: ${err.message}`, 'err');
+      $('dlSetupResult').textContent = `Ошибка: ${err.message}`;
+    }
+  });
+
+  function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const start = performance.now();
+    return fetch(url, { ...options, signal: controller.signal })
+      .then(res => {
+        clearTimeout(timer);
+        return { ok: res.ok, status: res.status, elapsed: performance.now() - start, hung: false };
+      })
+      .catch(err => {
+        clearTimeout(timer);
+        const elapsed = performance.now() - start;
+        const hung = err.name === 'AbortError';
+        return { ok: false, status: hung ? 'TIMEOUT' : 'ERROR', elapsed, hung, message: err.message };
+      });
+  }
+
+  function transferRequest(fromId, toId, amount, timeoutMs) {
+    return fetchWithTimeout(`${baseUrl()}/transfer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: fromId, targetUserId: toId, transferSum: amount })
+    }, timeoutMs);
+  }
+
+  $('dlRunBtn').addEventListener('click', async () => {
+    if (!userA || !userB) return;
+    $('dlRunBtn').disabled = true;
+    dlClearLog();
+    dlLog('Запускаю встречные переводы...');
+    $('dlVerdict').className = 'verdict';
+
+    const count = parseInt($('dlCount').value, 10);
+    const amount = parseInt($('dlAmount').value, 10);
+    const timeoutMs = parseInt($('dlTimeout').value, 10);
+    const startTotal = performance.now();
+
+    const requests = [];
+    for (let i = 0; i < count; i++) {
+      requests.push(
+        transferRequest(userA, userB, amount, timeoutMs).then(r => {
+          dlLog(`A→B #${i + 1}: ${r.hung ? 'ЗАВИС (таймаут)' : r.ok ? 'OK' : 'HTTP ' + r.status} (${Math.round(r.elapsed)}мс)`, r.hung ? 'err' : r.ok ? 'ok' : 'err');
+          return r;
+        })
+      );
+      requests.push(
+        transferRequest(userB, userA, amount, timeoutMs).then(r => {
+          dlLog(`B→A #${i + 1}: ${r.hung ? 'ЗАВИС (таймаут)' : r.ok ? 'OK' : 'HTTP ' + r.status} (${Math.round(r.elapsed)}мс)`, r.hung ? 'err' : r.ok ? 'ok' : 'err');
+          return r;
+        })
+      );
+    }
+
+    const results = await Promise.all(requests);
+    const totalDuration = performance.now() - startTotal;
+
+    const successCount = results.filter(r => r.ok).length;
+    const hangCount = results.filter(r => r.hung).length;
+    const failCount = results.length - successCount - hangCount;
+
+    $('dlSuccessCount').textContent = successCount;
+    $('dlFailCount').textContent = failCount;
+    $('dlHangCount').textContent = hangCount;
+    $('dlDuration').textContent = `${(totalDuration / 1000).toFixed(1)} с`;
+
+    const verdictEl = $('dlVerdict');
+    if (hangCount > 0) {
+      verdictEl.className = 'verdict race show';
+      verdictEl.textContent = `⚠️ Похоже на deadlock: ${hangCount} запрос(ов) не ответили за ${timeoutMs}мс — соответствующие потоки на сервере, скорее всего, зависли в ожидании чужой блокировки. Проверь консоль сервера — эти обработчики никогда не завершатся сами.`;
+    } else {
+      verdictEl.className = 'verdict clean show';
+      verdictEl.textContent = `✅ Все ${results.length} запросов завершились в пределах таймаута. Дедлок не проявился в этом запуске — увеличь количество переводов или уменьши таймаут и попробуй снова.`;
+    }
+
+    $('dlRunBtn').disabled = false;
   });
 </script>
 </body>
