@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.codeportfolio.tickethub.dto.EventRequestDto;
 import ru.codeportfolio.tickethub.dto.EventResponseDto;
 import ru.codeportfolio.tickethub.mapper.EventMapper;
+import ru.codeportfolio.tickethub.model.Action;
 import ru.codeportfolio.tickethub.model.Event;
 import ru.codeportfolio.tickethub.repository.EventRepository;
 
@@ -28,6 +29,7 @@ public class EventService {
             .expireAfterAccess(30,TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
+    private final AuditService auditService;
 
     public void createEvent(EventRequestDto eventRequestDto) {
         Event event = eventRepository.save(Event.builder()
@@ -38,6 +40,7 @@ public class EventService {
                 .build());
         log.info("Saved event {}, id: {}.", event.getName(), event.getId());
         putEventsToCache(eventRepository.findAll());
+        auditService.incrementAction(Action.CREATE_EVENT);
     }
 
     public List<EventResponseDto> getAllEvents() {

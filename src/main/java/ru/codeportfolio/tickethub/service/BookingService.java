@@ -6,6 +6,7 @@ import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import ru.codeportfolio.tickethub.model.Action;
 import ru.codeportfolio.tickethub.model.Booking;
 import ru.codeportfolio.tickethub.model.Event;
 import ru.codeportfolio.tickethub.repository.BookingRepository;
@@ -25,6 +26,7 @@ public class BookingService {
     private final TransactionTemplate transactionTemplate;
     private final ExecutorService notificationExecutor;
     private final AtomicLong bookingCounter;
+    private final AuditService auditService;
 
     private volatile boolean maintenanceMode = false;
 
@@ -47,8 +49,11 @@ public class BookingService {
         });
 
         CompletableFuture.allOf(asyncSendToAnalytic(), asyncSendNotification())
-                .thenRun(bookingCounter::incrementAndGet);
-
+                .thenRun( () -> {
+                            bookingCounter.incrementAndGet();
+                            auditService.incrementAction(Action.CREATE_BOOK);
+                        }
+                );
     }
 
     public void turnOnMaintenanceMode(){
