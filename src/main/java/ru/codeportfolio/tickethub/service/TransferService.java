@@ -9,6 +9,7 @@ import ru.codeportfolio.tickethub.model.User;
 import ru.codeportfolio.tickethub.repository.UserRepository;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Transactional
 public class TransferService {
     private final UserRepository userRepository;
+    private final AtomicLong transferCounter;
     private final ConcurrentHashMap<Long, Object> locks = new ConcurrentHashMap<>();
 
     public void execute(TransferRequestDto transferRequestDto) {
@@ -37,6 +39,7 @@ public class TransferService {
                 targetUser.addBalance(transferRequestDto.transferSum());
                 userRepository.save(user);
                 userRepository.save(targetUser);
+                transferCounter.incrementAndGet();
             }
         }
     }

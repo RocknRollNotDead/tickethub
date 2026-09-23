@@ -14,6 +14,7 @@ import ru.codeportfolio.tickethub.repository.UserRepository;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,9 @@ public class BookingService {
     private final UserRepository userRepository;
     private final TransactionTemplate transactionTemplate;
     private final ExecutorService notificationExecutor;
+    private final AtomicLong bookingCounter;
+
+    private volatile boolean maintenanceMode = false;
 
     @Retryable(includes = OptimisticLockingFailureException.class,
             maxRetries = 3, delay = 50)
@@ -43,8 +47,12 @@ public class BookingService {
         });
 
         CompletableFuture.allOf(asyncSendToAnalytic(), asyncSendNotification())
-                .thenRun(() -> System.out.println("Обе фоновые задачи завершены для брони " + userId + "/" + eventId));
+                .thenRun(bookingCounter::incrementAndGet);
 
+    }
+
+    public void turnOnMaintenanceMode(){
+        maintenanceMode = true;
     }
 
     private CompletableFuture<Void> asyncSendNotification() {
@@ -67,11 +75,14 @@ public class BookingService {
     }
 
 
+
     private void sendNotification() throws InterruptedException {
         Thread.sleep(1000); // отправка уведомления
     }
     private void writeToAnalytics() throws InterruptedException {
-        Thread.sleep(1000); // запись во внешний сервис
+        if (maintenanceMode) {
+            Thread.sleep(1000); // запись во внешний сервис
+        }
     }
 
 }
